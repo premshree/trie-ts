@@ -1,4 +1,4 @@
-import Trie from './tries';
+import Trie from './trie';
 
 const trie = new Trie();
 trie.add('fun');
