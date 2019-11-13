@@ -32,11 +32,50 @@ class Trie {
     if (word.length === 0) {
       node.setEnd();
       return;
-    } if (!node.children.has(word[0])) {
+    }
+
+    if (!node.children.has(word[0])) {
       node.children.set(word[0], new TrieNode());
     }
 
     this.add(word.substr(1), node.children.get(word[0]));
+  }
+
+  /**
+   * Remove a word from a Trie
+   *
+   * @param word
+   * @param node
+   * @param index
+   * @returns boolean
+   */
+  delete(word: string, node: TrieNode = this.root, index = 0): boolean {
+    const currentNode: TrieNode | undefined = node;
+    const nextNode: TrieNode | undefined = currentNode.children.get(word[index]);
+
+    if (currentNode === undefined) {
+      return false;
+    }
+
+    if (index === word.length) {
+      if (!currentNode.isEnd()) {
+        return false;
+      }
+      currentNode.setEnd(false);
+      return currentNode.children.size === 0;
+    }
+
+    if (!nextNode) {
+      return false;
+    }
+
+    const shouldDelete = this.delete(word, nextNode, index + 1);
+    if (shouldDelete) {
+      currentNode.children.delete(word[index]);
+      return currentNode.children.size === 0;
+    }
+
+    return false;
   }
 
   /**
@@ -63,6 +102,12 @@ class Trie {
     return !!node?.children.has(currentPrefix);
   }
 
+  /**
+   * Is this word in the Trie?
+   *
+   * @param word
+   * @returns boolean
+   */
   find(word: string): boolean {
     let node: TrieNode | undefined = this.root;
     if (!node) {
@@ -70,19 +115,25 @@ class Trie {
     }
 
     let currentWord: string = word;
-    let d = 0;
     while (currentWord.length > 1) {
       if (!node?.children.has(currentWord[0])) {
         return false;
       }
       node = node?.children.get(currentWord[0]);
       currentWord = currentWord.substr(1);
-      d += 1;
     }
 
     return !!node?.children.has(currentWord) && !!node?.children.get(currentWord)?.isEnd();
   }
 
+  /**
+   * Returns all words in this Trie
+   *
+   * @param node
+   * @param string
+   * @param words
+   * @returns Array<string>
+   */
   findAll(node: TrieNode = this.root, string = '', words: Array<string> = []): Array<string> {
     if (node.children.size !== 0) {
       node.children.forEach((value: TrieNode, key: string) => {
@@ -92,15 +143,19 @@ class Trie {
         words.push(string);
       }
     } else {
-      if (string.length > 0) {
-        words.push(string);
-      }
-      return words;
+      words.push(string);
     }
 
     return words;
   }
 
+  /**
+   * Given a string prefix, returns all words with that prefix in this Trie
+   *
+   * @param prefix
+   * @param node
+   * @returns Array<string>
+   */
   findWordsForPrefix(prefix: string, node: TrieNode = this.root): Array<string> {
     const originalPrefix = prefix;
     let currentNode: TrieNode | undefined = node;
@@ -110,6 +165,8 @@ class Trie {
         currentNode = currentNode?.children.get(currentPrefix[0]);
         currentPrefix = currentPrefix.substr(1);
       } else {
+        // if this char doesn't exist, then there are no words with
+        // this prefix in the trie, so return immediately
         return [];
       }
     }
